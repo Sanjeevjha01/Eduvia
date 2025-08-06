@@ -1,6 +1,6 @@
 # 📱 Eduvia – E-Learning App
 
-Eduvia is a modern, cross-platform e-learning mobile application built with **React Native**, allowing students to access video lectures, manage their profiles, and learn on the go.
+Eduvia is a modern, cross-platform e-learning mobile application built with **React Native**, allowing students to access video lectures, manage their profiles, and learn on the go. You can access backend from the repo "server" on my github repo.
 
 ---
 
