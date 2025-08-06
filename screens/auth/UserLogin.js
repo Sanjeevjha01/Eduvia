@@ -1,11 +1,31 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import student from "../../assets/LoginImg/student.png";
 import InputBox from "../../components/Form/InputBox";
 
+import { useDispatch } from "react-redux";
+import { useCustomHook } from "../../Hook/customHook";
+import { userLogin } from "../../redux/features/auth/userAction";
+
 const UserLogin = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const dispatch = useDispatch();
+  // const { loading, error, message } = useSelector((state) => state.user);
+  const loading = useCustomHook(navigation, "MainTabs");
+
+  // user login
+  const handleUserLogin = async () => {
+    if (!email || !password) {
+      return alert("Please add email or password");
+    }
+    try {
+      await dispatch(userLogin(email, password));
+    } catch (error) {
+      console.log("User login error:", error);
+    }
+  };
 
   const handleRegister = () => {
     navigation.navigate("UserRegister");
@@ -38,10 +58,7 @@ const UserLogin = ({ navigation }) => {
         value={password}
         setValue={setPassword}
       />
-      <TouchableOpacity
-        style={styles.loginBtn}
-        onPress={() => navigation.navigate("MainTabs")}
-      >
+      <TouchableOpacity style={styles.loginBtn} onPress={handleUserLogin}>
         <Text style={styles.loginBtnText}>Login</Text>
       </TouchableOpacity>
       <Text style={styles.registerTextCont}>

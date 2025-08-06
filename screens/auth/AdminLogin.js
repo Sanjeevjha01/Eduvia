@@ -3,13 +3,30 @@ import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import manager from "../../assets/LoginImg/manager.png";
 import InputBox from "../../components/Form/InputBox";
 
+import { useCustomHook } from "@/Hook/customHook";
+import { useDispatch } from "react-redux";
+import { admingLogin } from "../../redux/features/auth/userAction";
+
 const UserLogin = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  // register user
-  const handleRegister = () => {
-    navigation.navigate("UserRegister");
+  const dispatch = useDispatch();
+  const loading = useCustomHook(navigation, "MainTabs");
+
+  // admin login button
+  const handleAdminLogin = async () => {
+    if (!email || !password) {
+      alert("Please add email or password");
+    }
+    try {
+      // First login the admin
+      await dispatch(admingLogin(email, password));
+      // Then fetch admin profile data
+      dispatch(getAdminData());
+    } catch (error) {
+      console.log("Admin login error:", error);
+    }
   };
 
   return (
@@ -29,7 +46,7 @@ const UserLogin = ({ navigation }) => {
         value={password}
         setValue={setPassword}
       />
-      <TouchableOpacity style={styles.loginBtn}>
+      <TouchableOpacity style={styles.loginBtn} onPress={handleAdminLogin}>
         <Text style={styles.loginBtnText}>Admin Login</Text>
       </TouchableOpacity>
     </View>

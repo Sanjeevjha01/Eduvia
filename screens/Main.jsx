@@ -16,7 +16,7 @@ export default function Main() {
     return (
         <NavigationIndependentTree>
             <Stack.Navigator
-                initialRouteName={"MainTabs"}
+                initialRouteName={"UserLogin"}
                 screenOptions={{
                     headerStyle: {
                         backgroundColor: '#ffffff',

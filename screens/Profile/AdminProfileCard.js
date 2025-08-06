@@ -1,11 +1,8 @@
 import { useCustomHook } from "@/Hook/customHook";
-import {
-  logoutAdmin,
-  logoutFaculty,
-  logoutUser,
-} from "@/redux/features/auth/userAction";
+import { getAdminData, logoutAdmin } from "@/redux/features/auth/userAction";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { useEffect } from "react";
 import {
   Image,
   ScrollView,
@@ -17,54 +14,61 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import Profile from "../../assets/Eduvia App Icon/appIcon.png";
 
-const ProfileCard = () => {
+const AdminProfileCard = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
 
-  // Get user data from Redux state
-  const { user } = useSelector((state) => state.user);
+  // Get admin data from Redux state
+  const { admin, isAuth } = useSelector((state) => state.user);
 
-  const loading = useCustomHook(navigation, "UserLogin");
+  const loading = useCustomHook(navigation, "AdminLogin");
 
-  // Determine user type and appropriate logout action
-  const getUserType = () => {
-    if (user?.role === "faculty") return "faculty";
-    if (user?.role === "admin") return "admin";
-    return "user"; // default to user
-  };
+  // fetch admin data when component mounts
+  useEffect(() => {
+    if (isAuth) {
+      dispatch(getAdminData());
+    }
+  }, [dispatch, isAuth]);
 
   const handleLogout = () => {
-    const userType = getUserType();
-    switch (userType) {
-      case "faculty":
-        dispatch(logoutFaculty());
-        break;
-      case "admin":
-        dispatch(logoutAdmin());
-        break;
-      default:
-        dispatch(logoutUser());
-        break;
-    }
+    dispatch(logoutAdmin());
   };
 
   const profileOptions = [
     {
       icon: <Ionicons name="person-outline" size={24} color="#6B7280" />,
       title: "Edit Profile",
-      subtitle: "Update your personal information",
+      subtitle: "Update your admin information",
       action: () => navigation.navigate("EditProfile"),
+    },
+    {
+      icon: <Ionicons name="people-outline" size={24} color="#6B7280" />,
+      title: "Manage Users",
+      subtitle: "Manage students and faculty accounts",
+      action: () => navigation.navigate("ManageUsers"),
+    },
+    {
+      icon: <Ionicons name="school-outline" size={24} color="#6B7280" />,
+      title: "Manage Courses",
+      subtitle: "Add, edit, or remove courses",
+      action: () => navigation.navigate("ManageCourses"),
+    },
+    {
+      icon: <Ionicons name="analytics-outline" size={24} color="#6B7280" />,
+      title: "Analytics",
+      subtitle: "View platform statistics and reports",
+      action: () => navigation.navigate("Analytics"),
     },
     {
       icon: <Ionicons name="notifications-outline" size={24} color="#6B7280" />,
       title: "Notifications",
-      subtitle: "Manage your notification preferences",
+      subtitle: "Manage system notifications",
       action: () => navigation.navigate("Notification"),
     },
     {
       icon: <Ionicons name="shield-outline" size={24} color="#6B7280" />,
       title: "Privacy & Security",
-      subtitle: "Control your privacy settings",
+      subtitle: "Control security settings",
       action: () => navigation.navigate("Privacy"),
     },
     {
@@ -82,41 +86,11 @@ const ProfileCard = () => {
     {
       icon: <MaterialIcons name="logout" size={24} color="#EF4444" />,
       title: "Logout",
-      subtitle: "Sign out of your account",
+      subtitle: "Sign out of your admin account",
       action: handleLogout,
       isDestructive: true,
     },
   ];
-
-  // Display user info based on user type
-  const getUserDisplayInfo = () => {
-    const userType = getUserType();
-    const displayName = user?.name || "User";
-    const displayEmail = user?.email || "user@example.com";
-
-    switch (userType) {
-      case "faculty":
-        return {
-          name: displayName,
-          email: displayEmail,
-          role: "Faculty",
-        };
-      case "admin":
-        return {
-          name: displayName,
-          email: displayEmail,
-          role: "Admin",
-        };
-      default:
-        return {
-          name: displayName,
-          email: displayEmail,
-          role: "Student",
-        };
-    }
-  };
-
-  const userInfo = getUserDisplayInfo();
 
   return (
     <ScrollView
@@ -136,39 +110,39 @@ const ProfileCard = () => {
 
             <View className="items-center mt-4">
               <Text className="text-2xl font-bold text-gray-800">
-                {userInfo.name}
+                {admin?.name || "Administrator"}
               </Text>
               <Text className="text-gray-600 text-base mt-1">
-                {userInfo.email}
+                {admin?.email || "admin@example.com"}
               </Text>
               <Text className="text-blue-600 text-sm mt-2 font-medium">
-                {userInfo.role}
+                Administrator
               </Text>
             </View>
           </View>
         </View>
       </View>
 
-      {/* Stats Section */}
+      {/* Admin Stats Section */}
       <View className="bg-white mx-4 mt-6 rounded-xl shadow-sm border border-gray-100 items-center ">
         <View className="flex-row py-6 px-4 ">
           <View
             className="flex-1 items-center border-r border-gray-200 mx-2"
             style={{ marginRight: 20 }}
           >
-            <Text className="text-2xl font-bold text-gray-800">24</Text>
-            <Text className="text-gray-600 text-sm mt-1">Videos Watched</Text>
+            <Text className="text-2xl font-bold text-gray-800">1,245</Text>
+            <Text className="text-gray-600 text-sm mt-1">Total Users</Text>
           </View>
           <View
             className="flex-1 items-center border-r border-gray-200 mx-2"
             style={{ marginRight: 20 }}
           >
-            <Text className="text-2xl font-bold text-gray-800">12</Text>
-            <Text className="text-gray-600 text-sm">Courses Completed</Text>
+            <Text className="text-2xl font-bold text-gray-800">89</Text>
+            <Text className="text-gray-600 text-sm">Active Courses</Text>
           </View>
           <View className="flex-1 items-center mx-2">
-            <Text className="text-2xl font-bold text-gray-800">85%</Text>
-            <Text className="text-gray-600 text-sm mt-1">Progress</Text>
+            <Text className="text-2xl font-bold text-gray-800">98%</Text>
+            <Text className="text-gray-600 text-sm mt-1">Uptime</Text>
           </View>
         </View>
       </View>
@@ -176,7 +150,7 @@ const ProfileCard = () => {
       {/* Options Section */}
       <View className="mt-10 mx-4">
         <Text className="text-lg font-bold text-gray-800 mb-3 px-1">
-          Account Options
+          Admin Options
         </Text>
         <View className="bg-white rounded-xl shadow-sm border border-gray-100">
           {profileOptions.map((option, index) => (
@@ -239,4 +213,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ProfileCard;
+export default AdminProfileCard;
