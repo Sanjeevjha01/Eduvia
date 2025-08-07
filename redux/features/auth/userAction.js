@@ -5,6 +5,22 @@ import { server } from "../../store";
 // Configure axios to include credentials by default
 axios.defaults.withCredentials = true;
 
+// Add request interceptor to include token in headers
+axios.interceptors.request.use(
+  async (config) => {
+    const token = await AsyncStorage.getItem("@token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+      // Also set cookie header for server compatibility
+      config.headers.Cookie = `token=${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 // action for user login
 export const userLogin = (email, password) => async (dispatch) => {
   try {
@@ -23,13 +39,14 @@ export const userLogin = (email, password) => async (dispatch) => {
     );
     dispatch({
       type: "loginSuccess",
-      payload: data,
+      payload: { ...data, userType: "user" },
     });
     await AsyncStorage.setItem("@token", data?.token);
+    await AsyncStorage.setItem("@userType", "user");
   } catch (error) {
     dispatch({
       type: "loginFail",
-      payload: error.response.data.message,
+      payload: error.response.data.message || "Login Failed",
     });
   }
 };
@@ -56,13 +73,14 @@ export const facLogin = (email, password) => async (dispatch) => {
     );
     dispatch({
       type: "loginSuccess",
-      payload: data,
+      payload: { ...data, userType: "faculty" },
     });
     await AsyncStorage.setItem("@token", data?.token);
+    await AsyncStorage.setItem("@userType", "faculty");
   } catch (error) {
     dispatch({
       type: "loginFail",
-      payload: error.response.data.message,
+      payload: error.response.data.message || "Faculty login failed",
     });
   }
 };
@@ -86,13 +104,56 @@ export const admingLogin = (email, password) => async (dispatch) => {
     );
     dispatch({
       type: "loginSuccess",
-      payload: data,
+      payload: {
+        ...data,
+        userType: "admin",
+      },
     });
     await AsyncStorage.setItem("@token");
+    await AsyncStorage.setItem("@userType", "admin");
   } catch (error) {
     dispatch({
       type: "loginFail",
-      payload: error.response.data.message,
+      payload: error.response.data.message || "Admin login failed",
+    });
+  }
+};
+
+// IMPROVED: Unified profile data fetching
+export const getUserProfile = () => async (dispatch) => {
+  try {
+    dispatch({ type: "getUserDataRequest" });
+
+    const userType = (await AsyncStorage.getItem("@userType")) || "user";
+    let endpoint, dataKey;
+
+    switch (userType) {
+      case "faculty":
+        endpoint = `${server}/faculty/fac-profile`;
+        dataKey = "faculty";
+        break;
+      case "admin":
+        endpoint = `${server}/admin/admin-profile`;
+        dataKey = "admin";
+        break;
+      default:
+        endpoint = `${server}/user/profile`;
+        dataKey = "user";
+    }
+
+    const { data } = await axios.get(endpoint);
+
+    dispatch({
+      type: "getUserDataSuccess",
+      payload: {
+        ...data[dataKey],
+        role: userType,
+      },
+    });
+  } catch (error) {
+    dispatch({
+      type: "getUserDataFail",
+      payload: error.response?.data?.message || "Failed to get profile data",
     });
   }
 };
@@ -160,6 +221,43 @@ export const getAdminData = () => async (dispatch) => {
   }
 };
 
+// IMPROVED: Unified logout
+export const logout = () => async (dispatch) => {
+  try {
+    dispatch({ type: "logoutRequest" });
+
+    const userType = (await AsyncStorage.getItem("@userType")) || "user";
+    let endpoint;
+
+    switch (userType) {
+      case "faculty":
+        endpoint = `${server}/faculty/fac-logout`;
+        break;
+      case "admin":
+        endpoint = `${server}/admin/admin-logout`;
+        break;
+      default:
+        endpoint = `${server}/user/logout`;
+    }
+
+    const { data } = await axios.get(endpoint);
+
+    // Clear stored data
+    await AsyncStorage.removeItem("@token");
+    await AsyncStorage.removeItem("@userType");
+
+    dispatch({
+      type: "logoutSuccess",
+      payload: data?.message,
+    });
+  } catch (error) {
+    dispatch({
+      type: "logoutFail",
+      payload: error.response?.data?.message || "Logout failed",
+    });
+  }
+};
+
 // logout user action
 export const logoutUser = () => async (dispatch) => {
   try {
@@ -167,9 +265,9 @@ export const logoutUser = () => async (dispatch) => {
       type: "logoutRequest",
     });
     // hitting api
-    const { data } = await axios.get(`${server}/user/logout`, {
-      withCredentials: true,
-    });
+    const { data } = await axios.get(`${server}/user/logout`);
+    await AsyncStorage.removeItem("@token");
+    await AsyncStorage.removeItem("@userType");
     dispatch({
       type: "logoutSuccess",
       payload: data?.message,
@@ -188,9 +286,9 @@ export const logoutFaculty = () => async (dispatch) => {
     dispatch({
       type: "logoutRequest",
     });
-    const { data } = await axios.get(`${server}/faculty/fac-logout`, {
-      withCredentials: true,
-    });
+    const { data } = await axios.get(`${server}/faculty/fac-logout`);
+    await AsyncStorage.removeItem("@token");
+    await AsyncStorage.removeItem("@userType");
     dispatch({
       type: "logoutSuccess",
       payload: data?.message,
@@ -209,9 +307,9 @@ export const logoutAdmin = () => async (dispatch) => {
     dispatch({
       type: "logoutRequest",
     });
-    const { data } = await axios.get(`${server}/admin/admin-logout`, {
-      withCredentials: true,
-    });
+    const { data } = await axios.get(`${server}/admin/admin-logout`);
+    await AsyncStorage.removeItem("@token");
+    await AsyncStorage.removeItem("@userType");
     dispatch({
       type: "logoutSuccess",
       payload: data?.message,
