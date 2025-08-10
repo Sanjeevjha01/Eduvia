@@ -5,7 +5,7 @@ import InputBox from "../../components/Form/InputBox";
 
 import { useCustomHook } from "@/Hook/customHook";
 import { useDispatch } from "react-redux";
-import { facLogin } from "../../redux/features/auth/userAction";
+import { facLogin, getUserProfile } from "../../redux/features/auth/userAction";
 
 const UserLogin = ({ navigation }) => {
   const [email, setEmail] = useState("");
@@ -23,8 +23,8 @@ const UserLogin = ({ navigation }) => {
     try {
       // First login the faculty
       await dispatch(facLogin(email, password));
-      // Then fetch faculty profile data
-      dispatch(getFacultyData());
+      // Then fetch faculty profile data using unified profile function
+      dispatch(getUserProfile());
     } catch (error) {
       console.log("Faculty login error:", error);
     }

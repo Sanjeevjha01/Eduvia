@@ -5,7 +5,10 @@ import InputBox from "../../components/Form/InputBox";
 
 import { useCustomHook } from "@/Hook/customHook";
 import { useDispatch } from "react-redux";
-import { admingLogin } from "../../redux/features/auth/userAction";
+import {
+  adminLogin,
+  getUserProfile,
+} from "../../redux/features/auth/userAction";
 
 const UserLogin = ({ navigation }) => {
   const [email, setEmail] = useState("");
@@ -21,9 +24,9 @@ const UserLogin = ({ navigation }) => {
     }
     try {
       // First login the admin
-      await dispatch(admingLogin(email, password));
-      // Then fetch admin profile data
-      dispatch(getAdminData());
+      await dispatch(adminLogin(email, password));
+      // Then fetch admin profile data using unified profile function
+      dispatch(getUserProfile());
     } catch (error) {
       console.log("Admin login error:", error);
     }
